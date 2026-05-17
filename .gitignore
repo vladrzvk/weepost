@@ -1,0 +1,11 @@
+# Exécutables compilés
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+__debug_bin
+bin/
+
+# Variables d'environnement privées
+.env

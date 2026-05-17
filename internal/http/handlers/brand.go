@@ -72,7 +72,12 @@ func (h *BrandHandler) Update(c *fiber.Ctx) error {
 	if err != nil {
 		return respondBadRequest(c, "brandID invalide")
 	}
+	workspaceID, err := uuid.Parse(c.Query("workspace_id"))
+	if err != nil {
+		return respondBadRequest(c, "workspace_id invalide")
+	}
 	cmd.BrandID = brandID
+	cmd.WorkspaceID = workspaceID
 	cmd.ActorID = getUserID(c)
 
 	result := h.updateBrandUC.Execute(c.UserContext(), cmd)

@@ -23,6 +23,20 @@ const brandCols = `
 	tone_formality, tone_humor_level, tone_emojis_allowed,
 	created_at, updated_at, deleted_at`
 
+func nullableStr(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
+func derefStr(p *string) string {
+	if p == nil {
+		return ""
+	}
+	return *p
+}
+
 func scanBrand(s scanner) (*domain.Brand, error) {
 	var (
 		id, workspaceID                         uuid.UUID
@@ -30,7 +44,7 @@ func scanBrand(s scanner) (*domain.Brand, error) {
 		status                                  domain.BrandStatus
 		industry                                *string
 		logoURL, primaryColor, secondaryColor   *string
-		toneFormality, toneHumor                string
+		toneFormality, toneHumor                *string
 		toneEmojis                              bool
 		createdAt, updatedAt                    time.Time
 		deletedAt                               *time.Time
@@ -47,7 +61,7 @@ func scanBrand(s scanner) (*domain.Brand, error) {
 	return domain.RehydrateBrand(
 		id, workspaceID, name, slug, status, industry,
 		domain.BrandIdentity{LogoURL: logoURL, PrimaryColor: primaryColor, SecondaryColor: secondaryColor},
-		domain.ToneOfVoice{Formality: toneFormality, HumorLevel: toneHumor, EmojisAllowed: toneEmojis},
+		domain.ToneOfVoice{Formality: derefStr(toneFormality), HumorLevel: derefStr(toneHumor), EmojisAllowed: toneEmojis},
 		createdAt, updatedAt, deletedAt,
 	), nil
 }
@@ -63,7 +77,7 @@ func (r *PostgresBrandRepo) Create(ctx context.Context, b *domain.Brand) error {
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
 		b.ID(), b.WorkspaceID(), b.Name(), b.Slug(), b.Status(), b.Industry(),
 		id.LogoURL, id.PrimaryColor, id.SecondaryColor,
-		t.Formality, t.HumorLevel, t.EmojisAllowed,
+		nullableStr(t.Formality), nullableStr(t.HumorLevel), t.EmojisAllowed,
 		b.CreatedAt(), b.UpdatedAt(),
 	)
 	return err
@@ -90,7 +104,7 @@ func (r *PostgresBrandRepo) Update(ctx context.Context, b *domain.Brand) error {
 		WHERE id=$1 AND deleted_at IS NULL`,
 		b.ID(), b.Name(), b.Slug(), b.Status(), b.Industry(),
 		id.LogoURL, id.PrimaryColor, id.SecondaryColor,
-		t.Formality, t.HumorLevel, t.EmojisAllowed,
+		nullableStr(t.Formality), nullableStr(t.HumorLevel), t.EmojisAllowed,
 	)
 	return err
 }

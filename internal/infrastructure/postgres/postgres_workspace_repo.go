@@ -65,8 +65,14 @@ func scanWorkspace(s scanner) (*domain.Workspace, error) {
 }
 
 func (r *PostgresWorkspaceRepo) Create(ctx context.Context, w *domain.Workspace) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
 	s, l := w.Settings(), w.Limits()
-	_, err := r.db.Exec(ctx, `
+	_, err = tx.Exec(ctx, `
 		INSERT INTO workspaces (
 			id, slug, name, owner_user_id, status, current_mode, plan_id,
 			settings_language, settings_timezone, settings_date_format, settings_time_format, settings_week_start_day, settings_notifications_enabled,
@@ -78,7 +84,22 @@ func (r *PostgresWorkspaceRepo) Create(ctx context.Context, w *domain.Workspace)
 		l.MaxMembers, l.MaxBrands, l.MaxChannels,
 		w.CreatedAt(), w.UpdatedAt(),
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	for _, m := range w.Members() {
+		_, err = tx.Exec(ctx, `
+			INSERT INTO workspace_members (id, workspace_id, user_id, role, status, invited_by_member_id, created_at, updated_at)
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+			m.ID, m.WorkspaceID, m.UserID, m.Role, m.Status, m.InvitedByMemberID, m.CreatedAt, m.UpdatedAt,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresWorkspaceRepo) GetByID(ctx context.Context, id uuid.UUID) (*domain.Workspace, error) {

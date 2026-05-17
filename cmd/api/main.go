@@ -190,6 +190,10 @@ func main() {
 
 	app.Use(recover.New())
 	app.Use(requestid.New())
+	app.Use(func(c *fiber.Ctx) error {
+		c.Locals(middleware.LocalsTraceID, c.Get("X-Request-Id"))
+		return c.Next()
+	})
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: cfg.CORSOrigins,
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",

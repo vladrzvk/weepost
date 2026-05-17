@@ -17,12 +17,12 @@ import (
 // ─────────────────────────────────────────────────────────
 
 type AssignMemberToBrandCommand struct {
-	ActorID     uuid.UUID `validate:"required"`
-	WorkspaceID uuid.UUID `validate:"required"`
-	BrandID     uuid.UUID `validate:"required"`
-	MemberID    uuid.UUID `validate:"required"`
+	ActorID     uuid.UUID `validate:"required"                                          json:"-"`
+	WorkspaceID uuid.UUID `validate:"required"                                          json:"workspace_id"`
+	BrandID     uuid.UUID `validate:"required"                                          json:"-"`
+	MemberID    uuid.UUID `validate:"required"                                          json:"member_id"`
 	// Role — A025 : valeurs correctes = owner/manager/editor/viewer (pas brand_owner…)
-	Role string `validate:"required,oneof=owner manager editor viewer"`
+	Role string `validate:"required,oneof=owner manager editor viewer" json:"role"`
 }
 
 type AssignMemberToBrandResult struct {

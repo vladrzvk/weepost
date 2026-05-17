@@ -9,11 +9,12 @@ import (
 
 // respondDomainError convertit une *domain.DomainError en réponse HTTP uniforme.
 func respondDomainError(c *fiber.Ctx, domErr *domain.DomainError) error {
+	traceID, _ := c.Locals(middleware.LocalsTraceID).(string)
 	return c.Status(domain.GetHTTPStatus(domErr.Code)).JSON(middleware.ErrorResponse{
 		Code:    string(domErr.Code),
 		Message: domErr.Message,
 		Details: domErr.Details,
-		TraceID: c.Locals(middleware.LocalsTraceID).(string),
+		TraceID: traceID,
 	})
 }
 
@@ -22,10 +23,11 @@ func respondErr(c *fiber.Ctx, err error) error {
 	if domErr, ok := err.(*domain.DomainError); ok {
 		return respondDomainError(c, domErr)
 	}
+	traceID, _ := c.Locals(middleware.LocalsTraceID).(string)
 	return c.Status(500).JSON(middleware.ErrorResponse{
 		Code:    "INTERNAL_SERVER_ERROR",
 		Message: "Erreur interne",
-		TraceID: c.Locals(middleware.LocalsTraceID).(string),
+		TraceID: traceID,
 	})
 }
 

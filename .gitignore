@@ -9,3 +9,4 @@ bin/
 
 # Variables d'environnement privées
 .env
+/graphify-out
